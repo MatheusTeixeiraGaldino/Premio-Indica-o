@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Indicação — Prêmio por Indicação</title>
+  <link rel="stylesheet" href="../css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="hamburger" id="hamburger">☰</button>
+        <span class="topbar-title">Nova Indicação</span>
+      </div>
+      <div class="topbar-actions">
+        <a href="indicacoes.html" class="btn btn-ghost btn-sm">← Voltar à Lista</a>
+      </div>
+    </header>
+    <main class="page-content" style="max-width:800px">
+
+      <div id="alert-area"></div>
+
+      <div class="card">
+        <div class="form-section-title">👤 Dados do Colaborador Indicado</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Matrícula do Indicado *</label>
+            <input type="text" id="mat-indicado" class="form-control" placeholder="Ex: 00123">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome do Indicado *</label>
+            <input type="text" id="nome-indicado" class="form-control" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Setor *</label>
+            <input type="text" id="setor-indicado" class="form-control" placeholder="Nome do setor">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data de Admissão *</label>
+            <input type="date" id="data-admissao" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo de Contrato *</label>
+            <select id="tipo-contrato" class="form-control">
+              <option value="">Selecione...</option>
+              <option value="experiencia">Experiência (180 dias)</option>
+              <option value="determinado">Prazo Determinado</option>
+            </select>
+          </div>
+          <div class="form-group" id="grp-termino" style="display:none">
+            <label class="form-label">Data Prevista de Término *</label>
+            <input type="date" id="data-termino" class="form-control">
+          </div>
+        </div>
+
+        <hr class="form-divider">
+        <div class="form-section-title">🌟 Dados do Indicador</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Matrícula do Indicador *</label>
+            <input type="text" id="mat-indicador" class="form-control" placeholder="Ex: 00456">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome do Indicador *</label>
+            <input type="text" id="nome-indicador" class="form-control" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Setor do Indicador</label>
+            <input type="text" id="setor-indicador" class="form-control" placeholder="Setor atual">
+          </div>
+        </div>
+
+        <hr class="form-divider">
+        <div class="form-section-title">💰 Valores e Previsão</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Previsão de Pagamento</label>
+            <input type="date" id="previsao-pag" class="form-control" readonly style="background:var(--bg-card2);cursor:not-allowed">
+            <div class="text-sm text-muted mt-1" id="previsao-info">Calculado automaticamente</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor do Prêmio (R$)</label>
+            <input type="number" id="valor-premio" class="form-control" placeholder="Valor padrão">
+            <div class="text-sm text-muted mt-1">Deixe em branco para usar o valor padrão</div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4" style="justify-content:flex-end">
+          <a href="indicacoes.html" class="btn btn-ghost">Cancelar</a>
+          <button class="btn btn-primary btn-lg" id="save-btn">✓ Salvar Indicação</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { requireAuth } from '../js/auth.js';
+  import { renderSidebar, showToast } from '../js/ui.js';
+  import { criarIndicacao, calcularPrevisaoPagamento, toInputDate } from '../js/indicacoes.js';
+  import { getConfig } from '../js/config.js';
+
+  const user = requireAuth(['admin', 'dh']);
+  if (!user) throw new Error('Not auth');
+  renderSidebar('cadastro.html');
+
+  // Load default value
+  getConfig().then(cfg => {
+    if (cfg.valorPadrao) document.getElementById('valor-premio').placeholder = `Padrão: R$ ${cfg.valorPadrao}`;
+  });
+
+  const tipoEl = document.getElementById('tipo-contrato');
+  const grpTermino = document.getElementById('grp-termino');
+  const admEl = document.getElementById('data-admissao');
+  const terminoEl = document.getElementById('data-termino');
+  const previsaoEl = document.getElementById('previsao-pag');
+  const previsaoInfo = document.getElementById('previsao-info');
+
+  function updatePrevisao() {
+    const adm = admEl.value;
+    const tipo = tipoEl.value;
+    const termino = terminoEl.value;
+    if (!adm || !tipo) return;
+    const data = calcularPrevisaoPagamento(adm, tipo, termino);
+    previsaoEl.value = toInputDate(data);
+    previsaoInfo.textContent = 'Calculado: ' + data.toLocaleDateString('pt-BR');
+  }
+
+  tipoEl.addEventListener('change', () => {
+    grpTermino.style.display = tipoEl.value === 'determinado' ? '' : 'none';
+    updatePrevisao();
+  });
+
+  admEl.addEventListener('change', updatePrevisao);
+  terminoEl.addEventListener('change', updatePrevisao);
+
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    const alertArea = document.getElementById('alert-area');
+    alertArea.innerHTML = '';
+
+    const dados = {
+      matriculaIndicado: document.getElementById('mat-indicado').value.trim(),
+      nomeIndicado: document.getElementById('nome-indicado').value.trim(),
+      setorIndicado: document.getElementById('setor-indicado').value.trim(),
+      dataAdmissao: admEl.value,
+      tipoContrato: tipoEl.value,
+      dataTerminoContrato: terminoEl.value || null,
+      matriculaIndicador: document.getElementById('mat-indicador').value.trim(),
+      nomeIndicador: document.getElementById('nome-indicador').value.trim(),
+      setorIndicador: document.getElementById('setor-indicador').value.trim(),
+      valorPremio: document.getElementById('valor-premio').value || null
+    };
+
+    const required = ['matriculaIndicado', 'nomeIndicado', 'setorIndicado', 'dataAdmissao', 'tipoContrato', 'matriculaIndicador', 'nomeIndicador'];
+    const missing = required.filter(k => !dados[k]);
+    if (missing.length) {
+      alertArea.innerHTML = '<div class="alert alert-error">⚠ Preencha todos os campos obrigatórios.</div>';
+      return;
+    }
+    if (dados.tipoContrato === 'determinado' && !dados.dataTerminoContrato) {
+      alertArea.innerHTML = '<div class="alert alert-error">⚠ Informe a data de término para contrato determinado.</div>';
+      return;
+    }
+
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    try {
+      await criarIndicacao(dados, user.uid);
+      showToast('Indicação cadastrada com sucesso!', 'success');
+      setTimeout(() => window.location.href = 'indicacoes.html', 1000);
+    } catch (e) {
+      alertArea.innerHTML = `<div class="alert alert-error">Erro: ${e.message}</div>`;
+      btn.disabled = false;
+      btn.textContent = '✓ Salvar Indicação';
+    }
+  });
+</script>
+</body>
+</html>
