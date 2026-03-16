@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — Prêmio por Indicação</title>
+  <link rel="stylesheet" href="../css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="hamburger" id="hamburger">☰</button>
+        <span class="topbar-title">Configurações</span>
+      </div>
+    </header>
+    <main class="page-content" style="max-width:600px">
+
+      <div id="alert-area"></div>
+
+      <div class="card">
+        <div class="form-section-title">⚙️ Configurações do Sistema</div>
+        <div class="form-group">
+          <label class="form-label">Valor Padrão do Prêmio (R$)</label>
+          <input type="number" id="valor-padrao" class="form-control" placeholder="Ex: 500" min="0" step="0.01">
+          <div class="text-sm text-muted mt-1">Este valor é usado automaticamente ao criar novas indicações.</div>
+        </div>
+        <div class="flex gap-2 mt-4" style="justify-content:flex-end">
+          <button class="btn btn-primary" id="save-cfg">Salvar Configurações</button>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="form-section-title">🔑 Minha Senha</div>
+        <div id="pw-alert"></div>
+        <div class="form-group"><label class="form-label">Senha Atual</label><input type="password" id="pw-atual" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="pw-nova" class="form-control" placeholder="Mínimo 8 caracteres"></div>
+        <div class="form-group"><label class="form-label">Confirmar Nova Senha</label><input type="password" id="pw-conf" class="form-control"></div>
+        <div class="flex gap-2 mt-4" style="justify-content:flex-end">
+          <button class="btn btn-accent" id="save-pw">Alterar Senha</button>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="form-section-title">🔌 API de Integração — Firestore REST (gratuita)</div>
+        <p class="text-sm text-muted" style="margin-bottom:14px">
+          Envie colaboradores de qualquer sistema externo diretamente para o Firestore usando a REST API nativa do Firebase — <strong>100% gratuita</strong>, sem necessidade de Firebase Functions.
+        </p>
+
+        <div class="alert alert-info" style="margin-bottom:14px;font-size:13px">
+          <strong>Como funciona:</strong> O sistema externo faz login anônimo no Firebase para obter um token, depois usa esse token para escrever diretamente no Firestore via HTTPS.
+        </div>
+
+        <details open>
+          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--accent);padding:4px 0;margin-bottom:12px">
+            📖 Documentação completa da API
+          </summary>
+          <div style="background:var(--bg-card2);border-radius:8px;padding:16px;font-size:12.5px;display:flex;flex-direction:column;gap:14px">
+
+            <div>
+              <p style="font-weight:600;margin-bottom:6px">🔑 PASSO 1 — Obter token de acesso</p>
+              <p style="color:var(--text-muted);margin-bottom:6px">Método: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">POST</code> — válido por 1 hora, renove quando expirar</p>
+              <code style="display:block;background:var(--bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);word-break:break-all">https://identitytoolkit.googleapis.com/v1/accounts:signInAnonymously?key=AIzaSyD7E3w1x9ezsU_59brfx75mJ6V2xwDpID4</code>
+              <p style="color:var(--text-muted);margin-top:6px">Body: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">{}</code> &nbsp;|&nbsp; Resposta: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">{"idToken": "eyJ..."}</code></p>
+            </div>
+
+            <div>
+              <p style="font-weight:600;margin-bottom:6px">👤 PASSO 2 — Criar/Atualizar colaborador</p>
+              <p style="color:var(--text-muted);margin-bottom:6px">Método: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">PATCH</code> — usa matrícula como ID (MAT_00123) para evitar duplicatas</p>
+              <code style="display:block;background:var(--bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);word-break:break-all;margin-bottom:6px">https://firestore.googleapis.com/v1/projects/gestao-premios-indicacao/databases/(default)/documents/colaboradores/MAT_{MATRICULA}</code>
+              <p style="color:var(--text-muted);margin-bottom:6px">Header: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">Authorization: Bearer {idToken}</code></p>
+              <pre style="background:var(--bg);padding:10px 12px;border-radius:6px;border:1px solid var(--border);overflow-x:auto;margin:0">{
+  "fields": {
+    "matricula":    { "stringValue": "00123" },
+    "nome":         { "stringValue": "João Silva" },
+    "setor":        { "stringValue": "Produção" },
+    "dataAdmissao": { "stringValue": "2024-03-01" },
+    "tipoContrato": { "stringValue": "experiencia" },
+    "status":       { "stringValue": "ativo" },
+    "foiIndicado":  { "booleanValue": false },
+    "fonte":        { "stringValue": "api" }
+  }
+}</pre>
+            </div>
+
+            <div>
+              <p style="font-weight:600;margin-bottom:6px">🚪 Registrar desligamento</p>
+              <p style="color:var(--text-muted);margin-bottom:6px">Mesmo endpoint PATCH, apenas atualize os campos:</p>
+              <pre style="background:var(--bg);padding:10px 12px;border-radius:6px;border:1px solid var(--border);overflow-x:auto;margin:0">{
+  "fields": {
+    "status":           { "stringValue": "desligado" },
+    "dataDesligamento": { "stringValue": "2024-09-15" }
+  }
+}</pre>
+            </div>
+
+            <div>
+              <p style="font-weight:600;margin-bottom:6px">🐍 Exemplo completo em Python</p>
+              <pre style="background:var(--bg);padding:10px 12px;border-radius:6px;border:1px solid var(--border);overflow-x:auto;margin:0;font-size:11.5px">import requests
+
+API_KEY = "AIzaSyD7E3w1x9ezsU_59brfx75mJ6V2xwDpID4"
+PROJECT = "gestao-premios-indicacao"
+BASE = f"https://firestore.googleapis.com/v1/projects/{PROJECT}/databases/(default)/documents"
+
+def get_token():
+    r = requests.post(
+        f"https://identitytoolkit.googleapis.com/v1/accounts:signInAnonymously?key={API_KEY}",
+        json={}
+    )
+    return r.json()["idToken"]
+
+def upsert_colaborador(token, mat, nome, setor, data_adm, tipo="experiencia"):
+    url = f"{BASE}/colaboradores/MAT_{mat}"
+    body = {"fields": {
+        "matricula":    {"stringValue": mat},
+        "nome":         {"stringValue": nome},
+        "setor":        {"stringValue": setor},
+        "dataAdmissao": {"stringValue": data_adm},
+        "tipoContrato": {"stringValue": tipo},
+        "status":       {"stringValue": "ativo"},
+        "foiIndicado":  {"booleanValue": False},
+        "fonte":        {"stringValue": "api"}
+    }}
+    r = requests.patch(url, json=body, headers={"Authorization": f"Bearer {token}"})
+    print(r.status_code, r.json())
+
+token = get_token()
+upsert_colaborador(token, "00123", "João Silva", "Produção", "2024-03-01")</pre>
+            </div>
+
+            <div>
+              <p style="font-weight:600;margin-bottom:6px">🟨 Exemplo completo em JavaScript / Node.js</p>
+              <pre style="background:var(--bg);padding:10px 12px;border-radius:6px;border:1px solid var(--border);overflow-x:auto;margin:0;font-size:11.5px">const API_KEY = "AIzaSyD7E3w1x9ezsU_59brfx75mJ6V2xwDpID4";
+const PROJECT = "gestao-premios-indicacao";
+const BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+
+async function getToken() {
+  const r = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInAnonymously?key=${API_KEY}`,
+    { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } }
+  );
+  return (await r.json()).idToken;
+}
+
+async function upsertColaborador(token, mat, nome, setor, dataAdm, tipo = "experiencia") {
+  await fetch(`${BASE}/colaboradores/MAT_${mat}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ fields: {
+      matricula:    { stringValue: mat },
+      nome:         { stringValue: nome },
+      setor:        { stringValue: setor },
+      dataAdmissao: { stringValue: dataAdm },
+      tipoContrato: { stringValue: tipo },
+      status:       { stringValue: "ativo" },
+      foiIndicado:  { booleanValue: false },
+      fonte:        { stringValue: "api" }
+    }})
+  });
+}
+
+const token = await getToken();
+await upsertColaborador(token, "00123", "João Silva", "Produção", "2024-03-01");</pre>
+            </div>
+
+          </div>
+        </details>
+      </div>
+
+      <div class="card mt-4">
+        <div class="form-section-title">📋 Histórico de Alterações</div>
+        <div id="audit-list">
+          <div style="color:var(--text-muted);font-size:13px;padding:12px 0">Carregando...</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { requireAuth, changePassword } from '../js/auth.js';
+  import { renderSidebar, showToast } from '../js/ui.js';
+  import { getConfig, saveConfig } from '../js/config.js';
+  import { getAuditLogs } from '../js/audit.js';
+
+  const user = requireAuth(['admin', 'dh']);
+  if (!user) throw new Error('Not auth');
+  renderSidebar('configuracoes.html');
+
+  // Load config
+  getConfig().then(cfg => {
+    document.getElementById('valor-padrao').value = cfg.valorPadrao || '';
+  });
+
+  document.getElementById('save-cfg').addEventListener('click', async () => {
+    const val = parseFloat(document.getElementById('valor-padrao').value);
+    if (!val || val <= 0) { document.getElementById('alert-area').innerHTML = '<div class="alert alert-error">Informe um valor válido.</div>'; return; }
+    try {
+      await saveConfig({ valorPadrao: val }, user.uid);
+      document.getElementById('alert-area').innerHTML = '<div class="alert alert-success">Configurações salvas!</div>';
+      setTimeout(() => document.getElementById('alert-area').innerHTML = '', 3000);
+    } catch (e) { document.getElementById('alert-area').innerHTML = `<div class="alert alert-error">${e.message}</div>`; }
+  });
+
+  document.getElementById('save-pw').addEventListener('click', async () => {
+    const nova = document.getElementById('pw-nova').value;
+    const conf = document.getElementById('pw-conf').value;
+    const pwAlert = document.getElementById('pw-alert');
+    pwAlert.innerHTML = '';
+    if (nova.length < 8) { pwAlert.innerHTML = '<div class="alert alert-error">Senha muito curta (mínimo 8 caracteres).</div>'; return; }
+    if (nova !== conf) { pwAlert.innerHTML = '<div class="alert alert-error">Senhas não conferem.</div>'; return; }
+    try {
+      await changePassword(nova);
+      pwAlert.innerHTML = '<div class="alert alert-success">Senha alterada com sucesso!</div>';
+      document.getElementById('pw-nova').value = '';
+      document.getElementById('pw-conf').value = '';
+      document.getElementById('pw-atual').value = '';
+    } catch (e) { pwAlert.innerHTML = `<div class="alert alert-error">${e.message}</div>`; }
+  });
+
+  // Audit
+  const acao_labels = {
+    criar_indicacao: 'Indicação criada',
+    atualizar_indicacao: 'Indicação atualizada',
+    cancelar_indicacao: 'Indicação cancelada',
+    registrar_pagamento: 'Pagamento registrado',
+    criar_usuario: 'Usuário criado',
+    reset_senha: 'Senha redefinida',
+    desligamento_indicado: 'Desligamento registrado',
+    logout: 'Logout'
+  };
+
+  getAuditLogs(null, 30).then(logs => {
+    const el = document.getElementById('audit-list');
+    if (!logs.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Nenhum registro encontrado.</div>'; return; }
+    el.innerHTML = logs.map(l => `
+      <div class="audit-item">
+        <div class="audit-dot"></div>
+        <div>
+          <div class="audit-desc">${acao_labels[l.acao] || l.acao}</div>
+          <div class="audit-meta">${l.descricao} · ${l.timestamp?.toDate().toLocaleString('pt-BR') || ''}</div>
+        </div>
+      </div>
+    `).join('');
+  });
+</script>
+</body>
+</html>
