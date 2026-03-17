@@ -857,4 +857,14 @@ tbody td {
 }
 
 /* ── Chart placeholder ── */
-.chart-container { position: relative; height: 220px; }
+.chart-container { position: relative; height: 220px; width: 100%; }
+
+/* ── Charts row responsive ── */
+.charts-row { width: 100%; }
+
+@media (max-width: 900px) {
+  .charts-row { grid-template-columns: 1fr !important; }
+}
+
+/* ── Page max width ── */
+.page-content { max-width: 1400px; }
