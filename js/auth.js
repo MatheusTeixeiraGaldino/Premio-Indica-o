@@ -27,7 +27,8 @@ export async function logout() {
   if (userData) await addAuditLog('logout', 'Logout realizado', userData.uid);
   sessionStorage.removeItem('userData');
   await signOut(auth);
-  window.location.href = '/index.html';
+  // Redireciona para a raiz (index.html), que é a tela de login
+  window.location.href = '../index.html';
 }
 
 export function getCurrentUser() {
