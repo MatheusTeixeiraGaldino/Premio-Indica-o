@@ -85,17 +85,19 @@
 
       <div class="form-section-title">🌟 Dados de Quem Indicou</div>
       <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Matrícula de Quem Indicou *</label>
-          <input type="text" id="i-mat-indicador" class="form-control" placeholder="Ex: 00456">
+        <div class="form-group colab-search-container">
+          <label class="form-label">Buscar Quem Indicou (Nome ou Chapa) *</label>
+          <input type="text" id="i-busca-indicador" class="form-control" placeholder="Digite nome ou chapa para buscar...">
+          <div id="i-results-indicador" class="colab-results"></div>
+          <input type="hidden" id="i-mat-indicador">
+          <input type="hidden" id="i-nome-indicador">
+          <input type="hidden" id="i-setor-indicador">
         </div>
         <div class="form-group">
-          <label class="form-label">Nome de Quem Indicou *</label>
-          <input type="text" id="i-nome-indicador" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Setor de Quem Indicou</label>
-          <input type="text" id="i-setor-indicador" class="form-control" placeholder="Setor atual">
+          <label class="form-label">Indicador Selecionado</label>
+          <div id="i-indicador-selecionado" style="padding: 8px 12px; background: var(--bg-card2); border-radius: var(--radius); border: 1px solid var(--border); font-size: 13.5px;">
+            Nenhum indicador selecionado
+          </div>
         </div>
       </div>
 
@@ -175,6 +177,7 @@
   import { listarColaboradores, upsertColaborador, marcarComoIndicado, desmarcarComoIndicado, toInputDate } from '../js/colaboradores.js';
   import { criarIndicacao, calcularPrevisaoPagamento } from '../js/indicacoes.js';
   import { getConfig } from '../js/config.js';
+  import { initColabSearch } from '../js/colab-search.js';
 
   const user = requireAuth(['admin', 'dh']);
   if (!user) throw new Error('Not auth');
@@ -311,11 +314,29 @@
     document.getElementById('i-mat-indicador').value = '';
     document.getElementById('i-nome-indicador').value = '';
     document.getElementById('i-setor-indicador').value = '';
+    document.getElementById('i-busca-indicador').value = '';
+    document.getElementById('i-indicador-selecionado').innerHTML = 'Nenhum indicador selecionado';
     document.getElementById('i-valor').value = '';
     document.getElementById('indicar-alert').innerHTML = '';
 
     openModal('indicar-overlay');
   }
+
+  // Inicializar busca de indicador no modal
+  initColabSearch({
+    inputEl: document.getElementById('i-busca-indicador'),
+    resultsEl: document.getElementById('i-results-indicador'),
+    onSelect: (colab) => {
+      document.getElementById('i-mat-indicador').value = colab.matricula;
+      document.getElementById('i-nome-indicador').value = colab.nome;
+      document.getElementById('i-setor-indicador').value = colab.setor || '';
+      document.getElementById('i-busca-indicador').value = '';
+      document.getElementById('i-indicador-selecionado').innerHTML = `
+        <strong>${colab.nome}</strong><br>
+        <small>Chapa: ${colab.matricula} | Setor: ${colab.setor || '—'}</small>
+      `;
+    }
+  });
 
   // ── Salvar Indicação ────────────────────────────────────
   document.getElementById('indicar-save').addEventListener('click', async () => {
