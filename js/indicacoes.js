@@ -201,6 +201,16 @@ export async function listarIndicacoes(filtros = {}) {
     lista = lista.filter(i => i.criadoEm?.toDate() <= fim);
   }
 
+  // Filtro por mês/ano de admissão (YYYY-MM)
+  if (filtros.mesAdmissao) {
+    const [ano, mes] = filtros.mesAdmissao.split('-').map(Number);
+    lista = lista.filter(i => {
+      if (!i.dataAdmissao) return false;
+      const data = i.dataAdmissao.toDate ? i.dataAdmissao.toDate() : new Date(i.dataAdmissao);
+      return data.getFullYear() === ano && (data.getMonth() + 1) === mes;
+    });
+  }
+
   // Atualizar status de "previsto" para "aguardando_pagamento" se data passou
   const hoje = new Date();
   for (const ind of lista) {

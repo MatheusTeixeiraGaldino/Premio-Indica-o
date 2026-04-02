@@ -41,6 +41,9 @@
           <div class="form-group" style="margin:0">
             <input type="date" id="f-fim" class="form-control" placeholder="Data fim">
           </div>
+          <div class="form-group" style="margin:0;min-width:140px">
+            <input type="month" id="f-admissao" class="form-control" title="Mês/Ano de Admissão">
+          </div>
           <input type="text" id="f-busca" class="form-control" placeholder="Buscar nome..." style="flex:1;min-width:140px">
           <button class="btn btn-accent btn-sm" id="filter-btn">Filtrar</button>
           <button class="btn btn-ghost btn-sm" id="clear-btn">Limpar</button>
@@ -161,7 +164,8 @@
     const filtros = {
       status: document.getElementById('f-status').value,
       dataInicio: document.getElementById('f-inicio').value,
-      dataFim: document.getElementById('f-fim').value
+      dataFim: document.getElementById('f-fim').value,
+      mesAdmissao: document.getElementById('f-admissao').value // formato YYYY-MM
     };
     allData = await listarIndicacoes(filtros);
     render(allData);
@@ -338,6 +342,7 @@
     document.getElementById('f-status').value = 'todos';
     document.getElementById('f-inicio').value = '';
     document.getElementById('f-fim').value = '';
+    document.getElementById('f-admissao').value = '';
     document.getElementById('f-busca').value = '';
     load();
   });
