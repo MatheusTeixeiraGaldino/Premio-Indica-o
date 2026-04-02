@@ -86,6 +86,16 @@ export async function listarColaboradores(filtros = {}) {
     lista = lista.filter(c => c.foiIndicado === filtros.foiIndicado);
   }
 
+  // Filtro por mês/ano de admissão (YYYY-MM)
+  if (filtros.mesAdmissao) {
+    const [ano, mes] = filtros.mesAdmissao.split('-').map(Number);
+    lista = lista.filter(c => {
+      if (!c.dataAdmissao) return false;
+      const data = c.dataAdmissao.toDate ? c.dataAdmissao.toDate() : new Date(c.dataAdmissao);
+      return data.getFullYear() === ano && (data.getMonth() + 1) === mes;
+    });
+  }
+
   return lista;
 }
 

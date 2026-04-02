@@ -35,6 +35,7 @@
             <option value="nao">Sem indicação</option>
             <option value="sim">Com indicação</option>
           </select>
+          <input type="month" id="f-admissao" class="form-control" style="max-width:140px" title="Mês/Ano de Admissão">
           <button class="btn btn-accent btn-sm" id="filter-btn">Filtrar</button>
           <button class="btn btn-ghost btn-sm" id="clear-btn">Limpar</button>
         </div>
@@ -199,7 +200,8 @@
       busca: document.getElementById('f-busca').value,
       foiIndicado: document.getElementById('f-indicado').value === 'todos'
         ? undefined
-        : document.getElementById('f-indicado').value === 'sim'
+        : document.getElementById('f-indicado').value === 'sim',
+      mesAdmissao: document.getElementById('f-admissao').value // formato YYYY-MM
     };
     allColab = await listarColaboradores(filtros);
     render(allColab);
@@ -345,47 +347,40 @@
 
     const matIndicador = document.getElementById('i-mat-indicador').value.trim();
     const nomeIndicador = document.getElementById('i-nome-indicador').value.trim();
-    const setorIndicador = document.getElementById('i-setor-indicador').value.trim();
-    const valor = document.getElementById('i-valor').value;
 
     if (!matIndicador || !nomeIndicador) {
-      alertEl.innerHTML = '<div class="alert alert-error">Informe matrícula e nome de quem indicou.</div>';
+      alertEl.innerHTML = '<div class="alert alert-error">⚠ Selecione um indicador válido.</div>';
       return;
     }
+
+    const dados = {
+      matriculaIndicado: selectedColab.matricula,
+      nomeIndicado: selectedColab.nome,
+      setorIndicado: selectedColab.setor,
+      dataAdmissao: toInputDate(selectedColab.dataAdmissao),
+      tipoContrato: selectedColab.tipoContrato,
+      dataTerminoContrato: selectedColab.dataTerminoContrato ? toInputDate(selectedColab.dataTerminoContrato) : null,
+      matriculaIndicador: matIndicador,
+      nomeIndicador: nomeIndicador,
+      setorIndicador: document.getElementById('i-setor-indicador').value.trim(),
+      valorPremio: document.getElementById('i-valor').value || null
+    };
 
     const btn = document.getElementById('indicar-save');
     btn.disabled = true;
     btn.textContent = 'Salvando...';
 
     try {
-      const adm = toInputDate(selectedColab.dataAdmissao);
-      const termino = selectedColab.dataTerminoContrato ? toInputDate(selectedColab.dataTerminoContrato) : null;
-
-      const dados = {
-        matriculaIndicado: selectedColab.matricula,
-        nomeIndicado: selectedColab.nome,
-        setorIndicado: selectedColab.setor || '',
-        dataAdmissao: adm,
-        tipoContrato: selectedColab.tipoContrato,
-        dataTerminoContrato: termino,
-        matriculaIndicador: matIndicador,
-        nomeIndicador: nomeIndicador,
-        setorIndicador: setorIndicador,
-        valorPremio: valor ? parseFloat(valor) : null
-      };
-
       const indicacaoId = await criarIndicacao(dados, user.uid);
       await marcarComoIndicado(selectedColab.id, indicacaoId, user.uid);
-
-      showToast(`Indicação de ${selectedColab.nome} registrada com sucesso!`, 'success');
+      showToast('Indicação registrada com sucesso!', 'success');
       closeModal('indicar-overlay');
       await load();
     } catch (e) {
       alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      btn.disabled = false;
+      btn.textContent = '✓ Confirmar Indicação';
     }
-
-    btn.disabled = false;
-    btn.textContent = '✓ Confirmar Indicação';
   });
 
   document.getElementById('indicar-close').onclick = () => closeModal('indicar-overlay');
@@ -403,8 +398,8 @@
     openModal('manual-overlay');
   };
 
-  document.getElementById('m-tipo').addEventListener('change', (e) => {
-    document.getElementById('m-grp-termino').style.display = e.target.value === 'determinado' ? '' : 'none';
+  document.getElementById('m-tipo').addEventListener('change', () => {
+    document.getElementById('m-grp-termino').style.display = document.getElementById('m-tipo').value === 'determinado' ? '' : 'none';
   });
 
   document.getElementById('manual-close').onclick = () => closeModal('manual-overlay');
@@ -446,13 +441,15 @@
 
   // ── Filtros ────────────────────────────────────────────
   document.getElementById('filter-btn').addEventListener('click', load);
-  document.getElementById('f-busca').addEventListener('input', load);
   document.getElementById('clear-btn').addEventListener('click', () => {
     document.getElementById('f-busca').value = '';
     document.getElementById('f-status').value = 'ativo';
     document.getElementById('f-indicado').value = 'todos';
+    document.getElementById('f-admissao').value = '';
     load();
   });
+
+  document.getElementById('f-admissao').addEventListener('change', load);
 
   load();
 </script>
